@@ -14,7 +14,6 @@ export default function RevisionsPage() {
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Détection de la langue
   useEffect(() => {
     const saved = localStorage.getItem("kickstart-lang");
     if (saved && SUPPORTED_LANGUAGES.includes(saved as SupportedLang)) {
@@ -174,7 +173,7 @@ export default function RevisionsPage() {
         )}
       </div>
 
-      {/* Résultats affichés */}
+      {/* Résultats */}
       {result && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -221,4 +220,19 @@ export default function RevisionsPage() {
           {/* Flashcards */}
           {result.flashcards && result.flashcards.length > 0 && (
             <div className="grid md:grid-cols-2 gap-4">
-              {result.flashcards.map((card: any, idx: numb
+              {result.flashcards.map((card: any, idx: number) => (
+                <div
+                  key={idx}
+                  className="p-4 bg-white border rounded-xl shadow-sm"
+                >
+                  <p className="font-semibold">{card.front}</p>
+                  <p className="text-gray-600">{card.back}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
+    </div>
+  );
+}
