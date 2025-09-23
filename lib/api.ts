@@ -1,7 +1,4 @@
 // lib/api.ts
-
-// ⚠️ Doit pointer vers ton backend public (sans slash final), ex:
-// https://api.chantier-campus.com ou l’URL Render/Railway de ton backend
 export const API_URL =
   (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '');
 
@@ -12,11 +9,6 @@ type RequestOptions = {
   signal?: AbortSignal;
 };
 
-/**
- * Récupère un éventuel token côté client (localStorage).
- * - Si tu utilises des cookies httpOnly uniquement, ce n’est pas grave :
- *   on envoie quand même les cookies via `credentials: 'include'`.
- */
 function getBrowserToken(): string | null {
   if (typeof window === 'undefined') return null;
   const key = process.env.NEXT_PUBLIC_TOKEN_KEY || 'access_token';
@@ -27,22 +19,12 @@ function getBrowserToken(): string | null {
   }
 }
 
-/**
- * Appel générique fetch avec:
- * - baseURL (API_URL)
- * - cookies inclus (credentials: 'include')
- * - Authorization: Bearer <token> si présent (localStorage côté client)
- */
 async function request<T = unknown>(path: string, opts: RequestOptions = {}) {
-  if (!API_URL) {
-    throw new Error(
-      'NEXT_PUBLIC_API_URL est manquant. Définis-le dans tes variables d’environnement.'
-    );
-  }
+  if (!API_URL) throw new Error('NEXT_PUBLIC_API_URL est manquant.');
 
   const url = path.startsWith('http') ? path : `${API_URL}${path}`;
-
   const token = getBrowserToken();
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(opts.headers || {}),
@@ -55,7 +37,7 @@ async function request<T = unknown>(path: string, opts: RequestOptions = {}) {
     method: opts.method ?? 'GET',
     headers,
     body: opts.body ? JSON.stringify(opts.body) : undefined,
-    credentials: 'include', // envoie les cookies si ton backend en utilise
+    credentials: 'include',
     cache: 'no-store',
     signal: opts.signal,
   });
@@ -70,16 +52,15 @@ async function request<T = unknown>(path: string, opts: RequestOptions = {}) {
   return (await res.text()) as T;
 }
 
-/* =========================
-   Exports attendus par tes pages
-   ========================= */
-
-// /api/me
+/* === PROFIL === */
 export async function getMe() {
   return request('/api/me');
 }
+export async function updateProfile(payload: Record<string, unknown>) {
+  return request('/api/me', { method: 'PUT', body: payload });
+}
 
-// /api/notifications
+/* === NOTIFICATIONS === */
 export async function getNotifications(params?: {
   page?: number;
   limit?: number;
@@ -93,51 +74,48 @@ export async function getNotifications(params?: {
   return request(`/api/notifications${qs}`);
 }
 
-// POST /api/notifications/:id/read
-export async function markNotificationRead(id: string) {
-  if (!id) throw new Error('Paramètre "id" requis');
-  return request(`/api/notifications/${id}/read`, { method: 'POST' });
+export async function getPaginatedNotifications(
+  page = 1,
+  limit = 10,
+  unreadOnly = false
+) {
+  const qs = `?page=${page}&limit=${limit}&unreadOnly=${unreadOnly}`;
+  return request(`/api/notifications${qs}`);
 }
 
-// POST /api/notifications/read-all
+export async function markNotificationRead(id: string) {
+  return request(`/api/notifications/${id}/read`, { method: 'POST' });
+}
 export async function markAllNotificationsRead() {
   return request('/api/notifications/read-all', { method: 'POST' });
 }
 
-/* =========================
-   Tes endpoints "vitrine"
-   (conservent la logique existante)
-   ========================= */
-
-// GET /api/courses
-export async function fetchCourses() {
+/* === COURS === */
+export async function getCourses() {
   return request('/api/courses');
+}
+export async function fetchCourses() {
+  return getCourses(); // alias, compatibilité ancienne
 }
 export async function fetchCourse(id: string | number) {
   return request(`/api/courses/${id}`);
 }
 
-// GET /api/quizzes
-export async function fetchQuizzes() {
+/* === QUIZZES === */
+export async function getQuizzes() {
   return request('/api/quizzes');
+}
+export async function fetchQuizzes() {
+  return getQuizzes(); // alias
 }
 export async function fetchQuiz(id: string | number) {
   return request(`/api/quizzes/${id}`);
 }
 
-// GET /api/support
+/* === SUPPORT & TIERS === */
 export async function fetchSupport() {
   return request('/api/support');
 }
-
-// GET /api/tiers
 export async function fetchTiers() {
   return request('/api/tiers');
-}
-
-/* =========================
-   Profil (optionnel mais utile)
-   ========================= */
-export async function updateProfile(payload: Record<string, unknown>) {
-  return request('/api/me', { method: 'PUT', body: payload });
 }
