@@ -1,19 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { fetchTiers } from "@/lib/api";
-
-type Tier = {
-  id: number;
-  name: string;
-  labelFr: string;
-  labelEn: string;
-  price: number;
-  currency: string;
-  featuresFr: string;
-  featuresEn: string;
-};
+import { fetchTiers, type Tier } from "@/lib/api";
 
 export default function TiersPage() {
   const [tiers, setTiers] = useState<Tier[]>([]);
@@ -24,7 +12,7 @@ export default function TiersPage() {
     async function loadTiers() {
       try {
         const data = await fetchTiers();
-        setTiers(data);
+        setTiers(data.tiers); // ✅ On passe seulement le tableau
       } catch (err) {
         console.error("Erreur lors du chargement des plans :", err);
         setError("Impossible de charger les plans tarifaires.");
@@ -36,57 +24,37 @@ export default function TiersPage() {
   }, []);
 
   if (loading) {
-    return <p className="text-center mt-10 text-gray-500">Chargement des plans...</p>;
+    return <p className="p-6 text-gray-500">Chargement des plans...</p>;
   }
 
   if (error) {
-    return <p className="text-center mt-10 text-red-500">{error}</p>;
+    return <p className="p-6 text-red-600">{error}</p>;
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 py-16 px-6">
-      <motion.h1
-        className="text-4xl font-bold text-center mb-8"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        Nos plans tarifaires
-      </motion.h1>
-
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
-        {tiers.map((tier) => {
-          const featuresFr: string[] = JSON.parse(tier.featuresFr || "[]");
-          return (
-            <motion.div
+    <main className="p-6 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Plans tarifaires</h1>
+      {tiers.length === 0 ? (
+        <p className="text-gray-500">Aucun plan disponible pour le moment.</p>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {tiers.map((tier) => (
+            <div
               key={tier.id}
-              className="bg-white rounded-2xl shadow-lg p-6 flex flex-col"
-              whileHover={{ scale: 1.02 }}
+              className="p-4 border rounded-lg shadow-sm bg-white flex flex-col"
             >
-              <h2 className="text-2xl font-semibold mb-2">{tier.labelFr}</h2>
-              <p className="text-3xl font-bold text-blue-600 mb-4">
-                {tier.price === 0 ? "Gratuit" : `${tier.price.toLocaleString()} ${tier.currency}`}
+              <h2 className="text-lg font-semibold mb-2">{tier.name}</h2>
+              <p className="text-gray-700 mb-2">
+                {tier.currency ? `${tier.price} ${tier.currency}` : tier.price}
               </p>
-
-              <ul className="flex-1 mb-4 space-y-2 text-gray-700">
-                {featuresFr.length > 0 ? (
-                  featuresFr.map((feature, idx) => (
-                    <li key={idx} className="flex items-center">
-                      ✅ <span className="ml-2">{feature}</span>
-                    </li>
-                  ))
-                ) : (
-                  <li className="text-gray-400">Aucune fonctionnalité renseignée</li>
-                )}
-              </ul>
-
-              <button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2 px-4 transition">
+              {/* Ajoute ici d'autres infos si disponibles dans l'API */}
+              <button className="mt-auto px-4 py-2 bg-blue-600 text-white rounded">
                 Choisir ce plan
               </button>
-            </motion.div>
-          );
-        })}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
     </main>
   );
 }

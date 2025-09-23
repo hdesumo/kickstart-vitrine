@@ -4,13 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { t, SupportedLang, SUPPORTED_LANGUAGES } from "@/lib/i18n";
 import CourseCard from "@/components/CourseCard";
-import { fetchCourses } from "@/lib/api";
-
-type Course = {
-  id: number;
-  title: string;
-  description?: string;
-};
+import { fetchCourses, type Course } from "@/lib/api";
 
 export default function LearningPage() {
   const [lang, setLang] = useState<SupportedLang>("fr");
@@ -33,7 +27,7 @@ export default function LearningPage() {
     async function loadCourses() {
       try {
         const data = await fetchCourses();
-        setCourses(data);
+        setCourses(data.courses); // ✅ Corrigé : on passe le tableau de cours
       } catch (error) {
         console.error("Erreur lors du chargement des cours :", error);
       } finally {
@@ -47,7 +41,6 @@ export default function LearningPage() {
   return (
     <main className="flex flex-col min-h-screen bg-gray-50">
       <section className="flex-1 px-6 py-12 max-w-5xl mx-auto space-y-8">
-        {/* ✅ Titre animé */}
         <motion.h1
           className="text-3xl font-bold text-blue-600 text-center"
           initial={{ opacity: 0, y: -20 }}
@@ -59,7 +52,6 @@ export default function LearningPage() {
             : "Learn, Grow & Launch Ventures"}
         </motion.h1>
 
-        {/* ✅ Description animée */}
         <motion.p
           className="text-gray-700 leading-relaxed max-w-2xl mx-auto text-center"
           initial={{ opacity: 0 }}
@@ -71,7 +63,6 @@ export default function LearningPage() {
             : "Kickstart Campus offers a curated catalog of courses to help you acquire the entrepreneurial skills you need to succeed."}
         </motion.p>
 
-        {/* ✅ Liste des cours */}
         {loading ? (
           <p className="text-center text-gray-500">
             {lang === "fr" ? "Chargement des cours..." : "Loading courses..."}

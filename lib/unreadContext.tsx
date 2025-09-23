@@ -1,38 +1,45 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
-import { getUnreadNotifications, logout as apiLogout } from "@/lib/api";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { getUnreadNotifications } from "@/lib/api";
 
-const UnreadContext = createContext<any>(null);
+interface UnreadContextType {
+  unreadCount: number;
+  refreshUnread: () => Promise<void>;
+}
 
-export function UnreadProvider({ children }: { children: React.ReactNode }) {
-  const [unread, setUnread] = useState(0);
+const UnreadContext = createContext<UnreadContextType | undefined>(undefined);
+
+export function UnreadProvider({ children }: { children: ReactNode }) {
+  const [unreadCount, setUnreadCount] = useState(0);
 
   async function refreshUnread() {
     try {
-      const res = await getUnreadNotifications();
-      setUnread(res.unread);
-    } catch {
-      setUnread(0);
+      const data = await getUnreadNotifications();
+      setUnreadCount(data.count);
+    } catch (error) {
+      console.error("Erreur récupération notifications non lues:", error);
     }
-  }
-
-  async function logout() {
-    await apiLogout();
-    setUnread(0);
   }
 
   useEffect(() => {
     refreshUnread();
+    // Optionnel : rafraîchir toutes les 60s
+    const interval = setInterval(refreshUnread, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
-    <UnreadContext.Provider value={{ unread, refreshUnread, logout }}>
+    <UnreadContext.Provider value={{ unreadCount, refreshUnread }}>
       {children}
     </UnreadContext.Provider>
   );
 }
 
-export function useUnreadCount() {
-  return useContext(UnreadContext);
+export function useUnread() {
+  const context = useContext(UnreadContext);
+  if (!context) {
+    throw new Error("useUnread must be used within an UnreadProvider");
+  }
+  return context;
 }

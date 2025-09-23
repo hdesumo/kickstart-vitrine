@@ -52,12 +52,88 @@ async function request<T = unknown>(path: string, opts: RequestOptions = {}) {
   return (await res.text()) as T;
 }
 
-/* === PROFIL === */
-export async function getMe() {
-  return request('/api/me');
+/* === TYPES === */
+export interface Course {
+  id: number;
+  title: string;
+  description?: string;
+  [key: string]: unknown;
 }
-export async function updateProfile(payload: Record<string, unknown>) {
-  return request('/api/me', { method: 'PUT', body: payload });
+export interface CoursesResponse {
+  courses: Course[];
+}
+
+export interface Quiz {
+  id: number;
+  title: string;
+  [key: string]: unknown;
+}
+export interface QuizzesResponse {
+  quizzes: Quiz[];
+}
+
+export interface Project {
+  id: number;
+  title: string;
+  description?: string;
+  [key: string]: unknown;
+}
+export interface ProjectsResponse {
+  projects: Project[];
+}
+
+export interface Notification {
+  id: number;
+  title?: string;
+  message?: string;
+  read: boolean;
+  createdAt: string;
+  [key: string]: unknown;
+}
+export interface NotificationsResponse {
+  notifications: Notification[];
+  total: number;
+}
+
+export interface UserProfile {
+  id: number;
+  email: string;
+  name?: string;
+  role?: string;
+  [key: string]: unknown;
+}
+
+export interface Tier {
+  id: number;
+  name: string;
+  price: number;
+  currency?: string;
+  [key: string]: unknown;
+}
+export interface TiersResponse {
+  tiers: Tier[];
+}
+
+export interface RevisionResponse {
+  status: "success" | "error";
+  message?: string;
+  questions?: string[];
+  summary?: string;
+  createdAt?: string;
+  [key: string]: unknown;
+}
+
+/* === AUTH === */
+export async function logout(): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>('/api/logout', { method: 'POST' });
+}
+
+/* === PROFIL === */
+export async function getMe(): Promise<UserProfile> {
+  return request<UserProfile>('/api/me');
+}
+export async function updateProfile(payload: Partial<UserProfile>): Promise<UserProfile> {
+  return request<UserProfile>('/api/me', { method: 'PUT', body: payload });
 }
 
 /* === NOTIFICATIONS === */
@@ -65,57 +141,91 @@ export async function getNotifications(params?: {
   page?: number;
   limit?: number;
   unreadOnly?: boolean;
-}) {
+}): Promise<NotificationsResponse> {
   const q = new URLSearchParams();
   if (params?.page) q.set('page', String(params.page));
   if (params?.limit) q.set('limit', String(params.limit));
   if (params?.unreadOnly) q.set('unreadOnly', 'true');
   const qs = q.toString() ? `?${q}` : '';
-  return request(`/api/notifications${qs}`);
+  return request<NotificationsResponse>(`/api/notifications${qs}`);
 }
 
 export async function getPaginatedNotifications(
   page = 1,
   limit = 10,
   unreadOnly = false
-) {
+): Promise<NotificationsResponse> {
   const qs = `?page=${page}&limit=${limit}&unreadOnly=${unreadOnly}`;
-  return request(`/api/notifications${qs}`);
+  return request<NotificationsResponse>(`/api/notifications${qs}`);
 }
 
-export async function markNotificationRead(id: string) {
-  return request(`/api/notifications/${id}/read`, { method: 'POST' });
+export async function getUnreadNotifications(): Promise<{ count: number }> {
+  return request<{ count: number }>('/api/notifications/unread-count');
 }
-export async function markAllNotificationsRead() {
-  return request('/api/notifications/read-all', { method: 'POST' });
+
+export async function markNotificationRead(id: number): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>(`/api/notifications/${id}/read`, { method: 'POST' });
+}
+export async function markAllNotificationsRead(): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>('/api/notifications/read-all', { method: 'POST' });
 }
 
 /* === COURS === */
-export async function getCourses() {
-  return request('/api/courses');
+export async function getCourses(): Promise<CoursesResponse> {
+  return request<CoursesResponse>('/api/courses');
 }
 export async function fetchCourses() {
-  return getCourses(); // alias, compatibilité ancienne
+  return getCourses();
 }
-export async function fetchCourse(id: string | number) {
-  return request(`/api/courses/${id}`);
+export async function fetchCourse(id: number): Promise<Course> {
+  return request<Course>(`/api/courses/${id}`);
 }
 
 /* === QUIZZES === */
-export async function getQuizzes() {
-  return request('/api/quizzes');
+export async function getQuizzes(): Promise<QuizzesResponse> {
+  return request<QuizzesResponse>('/api/quizzes');
 }
 export async function fetchQuizzes() {
-  return getQuizzes(); // alias
+  return getQuizzes();
 }
-export async function fetchQuiz(id: string | number) {
-  return request(`/api/quizzes/${id}`);
+export async function fetchQuiz(id: number): Promise<Quiz> {
+  return request<Quiz>(`/api/quizzes/${id}`);
 }
 
-/* === SUPPORT & TIERS === */
-export async function fetchSupport() {
-  return request('/api/support');
+/* === PROJECTS === */
+export async function getProjects(): Promise<ProjectsResponse> {
+  return request<ProjectsResponse>('/api/projects');
+}
+
+/* === TIERS === */
+export async function getTiers(): Promise<TiersResponse> {
+  return request<TiersResponse>('/api/tiers');
 }
 export async function fetchTiers() {
-  return request('/api/tiers');
+  return getTiers();
+}
+
+/* === REVISIONS === */
+export async function generateRevision(
+  subject: string,
+  chapter: string,
+  exerciseType: string
+): Promise<RevisionResponse> {
+  return request<RevisionResponse>('/api/revisions/generate', {
+    method: 'POST',
+    body: { subject, chapter, exerciseType },
+  });
+}
+
+/* === SUPPORT PUBLIC === */
+export async function fetchSupport(): Promise<Record<string, unknown>> {
+  return request('/api/support');
+}
+export async function sendPublicSupport(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+  return request('/api/support/public', { method: 'POST', body: payload });
+}
+
+/* === SEARCH === */
+export async function getSuggestions(query: string): Promise<string[]> {
+  return request<string[]>(`/api/search/suggestions?q=${encodeURIComponent(query)}`);
 }

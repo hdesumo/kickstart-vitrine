@@ -1,59 +1,52 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { getCourses, getQuizzes } from "@/lib/api";
+import { useEffect, useState } from 'react';
+import { getCourses, getQuizzes, type Course, type Quiz } from '@/lib/api';
 
 export default function DashboardPage() {
-  const [courses, setCourses] = useState<any[]>([]);
-  const [quizzes, setQuizzes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
 
   useEffect(() => {
-    async function fetchData() {
+    async function loadData() {
       try {
         const [coursesRes, quizzesRes] = await Promise.all([getCourses(), getQuizzes()]);
-        setCourses(coursesRes.courses);
-        setQuizzes(quizzesRes.quizzes);
+        setCourses(coursesRes.courses); // ✅ On accède au tableau
+        setQuizzes(quizzesRes.quizzes); // ✅ Idem pour les quizzes
       } catch (error) {
-        console.error("Erreur dashboard:", error);
-      } finally {
-        setLoading(false);
+        console.error('Erreur dashboard:', error);
       }
     }
-    fetchData();
+    loadData();
   }, []);
 
-  if (loading) return <p className="text-gray-600">Chargement...</p>;
-
   return (
-    <section>
-      <h1 className="text-2xl font-bold mb-4">Tableau de bord</h1>
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="card">
-          <h2 className="text-lg font-semibold mb-2">Mes cours</h2>
-          {courses.length > 0 ? (
-            <ul className="list-disc ml-4">
-              {courses.map((c) => (
-                <li key={c.id}>{c.title}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500">Aucun cours disponible.</p>
-          )}
-        </div>
-        <div className="card">
-          <h2 className="text-lg font-semibold mb-2">Mes quizzes</h2>
-          {quizzes.length > 0 ? (
-            <ul className="list-disc ml-4">
-              {quizzes.map((q) => (
-                <li key={q.id}>{q.title}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500">Aucun quiz disponible.</p>
-          )}
-        </div>
-      </div>
-    </section>
+    <div className="p-4">
+      <h1 className="text-xl font-bold mb-4">Tableau de bord</h1>
+
+      <section className="mb-6">
+        <h2 className="text-lg font-semibold mb-2">Mes cours</h2>
+        {courses.length === 0 && <p>Aucun cours disponible.</p>}
+        <ul className="space-y-2">
+          {courses.map((course) => (
+            <li key={course.id} className="p-2 rounded bg-gray-100">
+              {course.title}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section>
+        <h2 className="text-lg font-semibold mb-2">Mes quiz</h2>
+        {quizzes.length === 0 && <p>Aucun quiz disponible.</p>}
+        <ul className="space-y-2">
+          {quizzes.map((quiz) => (
+            <li key={quiz.id} className="p-2 rounded bg-gray-100">
+              {quiz.title}
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
   );
 }

@@ -1,35 +1,32 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { getTiers } from "@/lib/api";
+import { useEffect, useState } from 'react';
+import { getTiers, type Tier } from '@/lib/api';
 
 export default function WalletPage() {
-  const [tiers, setTiers] = useState<any[]>([]);
+  const [tiers, setTiers] = useState<Tier[]>([]);
 
   useEffect(() => {
     getTiers()
       .then((res) => setTiers(res.tiers))
-      .catch((err) => console.error("Erreur wallet:", err));
+      .catch((err) => console.error('Erreur wallet:', err));
   }, []);
 
   return (
-    <section>
-      <h1 className="text-2xl font-bold mb-4">Mon Wallet</h1>
-      <p className="text-gray-600 mb-6">
-        Cet espace affichera ton solde, ton historique de transactions et tes avantages.
-      </p>
-      <h2 className="text-lg font-semibold mb-2">Abonnements disponibles</h2>
-      <ul className="space-y-2">
+    <div className="p-4">
+      <h1 className="text-xl font-bold mb-4">Formules disponibles</h1>
+      {tiers.length === 0 && <p>Aucune formule trouvée.</p>}
+      <ul className="space-y-3">
         {tiers.map((tier) => (
-          <li key={tier.id} className="card">
-            <p className="font-medium">{tier.kind}</p>
-            <p className="text-sm text-gray-500">
-              {tier.minMonthlyUsd} {tier.currency} / mois –{" "}
-              {tier.benefits || "Aucun détail"}
-            </p>
+          <li key={tier.id} className="p-3 rounded bg-gray-100 flex justify-between">
+            <div>
+              <div className="font-semibold">{tier.name}</div>
+              {tier.currency && <div className="text-sm text-gray-600">{tier.currency}</div>}
+            </div>
+            <div className="font-bold">{tier.price}</div>
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 }

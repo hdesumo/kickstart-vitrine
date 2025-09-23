@@ -1,29 +1,32 @@
-// lib/i18n.ts
 export type SupportedLang = "fr" | "en";
 
 export const SUPPORTED_LANGUAGES: SupportedLang[] = ["fr", "en"];
 
-// Dictionnaire de traductions
-export const translations: Record<SupportedLang, Record<string, string>> = {
+const translations = {
   fr: {
-    learning: "Learning",
-    subscriptions: "Abonnements",
-    about: "À propos",
+    home: "Accueil",
+    courses: "Cours",
+    projects: "Projets",
+    contact: "Contact",
     login: "Connexion",
-    searchPlaceholder: "Rechercher...",
-    footer: "Tous droits réservés",
+    about: "À propos",
+    privacy: "Politique de confidentialité",
+    terms: "Conditions d'utilisation",
+    rights: "Tous droits réservés",
   },
   en: {
-    learning: "Learning",
-    subscriptions: "Subscriptions",
-    about: "About",
+    home: "Home",
+    courses: "Courses",
+    projects: "Projects",
+    contact: "Contact",
     login: "Login",
-    searchPlaceholder: "Search...",
-    footer: "All rights reserved",
+    about: "About",
+    privacy: "Privacy Policy",
+    terms: "Terms of Use",
+    rights: "All rights reserved",
   },
 };
 
-// Helper pour récupérer une traduction
-export const t = (lang: SupportedLang, key: string) => {
+export function t(key: keyof typeof translations["fr"], lang: SupportedLang) {
   return translations[lang]?.[key] ?? key;
-};
+}
