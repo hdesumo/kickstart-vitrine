@@ -1,13 +1,9 @@
-import "./globals.css";
 import type { Metadata } from "next";
-import { UnreadProvider } from "@/lib/unreadContext";
-import Navbar from "@/components/Navbar"; // ou NavbarStudent si c'est le layout étudiant
-import Footer from "@/components/Footer";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Kickstart Campus",
-  description:
-    "La première plateforme d'émancipation économique étudiante d'Afrique – épargne collaborative, apprentissage et financement de projets.",
+  description: "Plateforme pour apprendre, se connecter et trouver des opportunités.",
 };
 
 export default function RootLayout({
@@ -16,19 +12,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr">
-      <body className="min-h-screen flex flex-col bg-gray-50">
-        {/* Provider global pour les notifications */}
-        <UnreadProvider>
-          {/* Navbar en haut */}
-          <Navbar />
-
-          {/* Contenu principal */}
-          <main className="flex-1">{children}</main>
-
-          {/* Footer en bas */}
-          <Footer />
-        </UnreadProvider>
+    <html lang="fr" suppressHydrationWarning>
+      <body className="min-h-screen flex flex-col bg-white">
+        {/* Le Layout principal inclut déjà le Header et le Footer */}
+        {children}
       </body>
     </html>
   );

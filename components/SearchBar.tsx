@@ -1,77 +1,91 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { getSuggestions } from "@/lib/api";
+import React, { useState, useEffect } from "react";
 
-export default function SearchBar() {
+interface Suggestion {
+  id: string;
+  title: string;
+}
+
+const SearchIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-5 w-5"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    strokeWidth={2}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103.6 3.6a7.5 7.5 0 0013.05 13.05z"
+    />
+  </svg>
+);
+
+const SearchBar: React.FC = () => {
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [open, setOpen] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
   useEffect(() => {
-    // Annule les appels précédents si l'utilisateur continue à taper
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    if (!query.trim()) {
-      setSuggestions([]);
-      setOpen(false);
-      return;
-    }
-
-    // Ajout du debounce : attend 300 ms avant d'appeler l'API
-    timeoutRef.current = setTimeout(() => {
-      let active = true;
-      getSuggestions(query)
-        .then((res) => {
-          if (!active) return;
-          setSuggestions(res); // ✅ res est déjà un tableau de string[]
-          setOpen(res.length > 0);
-        })
-        .catch(() => {
-          setSuggestions([]);
-          setOpen(false);
-        });
-
-      return () => {
-        active = false;
-      };
+    const delayDebounce = setTimeout(() => {
+      if (query.length > 1) {
+        fetch(`/api/search?q=${encodeURIComponent(query)}`)
+          .then((res) => res.json())
+          .then((data) => setSuggestions(data))
+          .catch(() => setSuggestions([]));
+      } else {
+        setSuggestions([]);
+      }
     }, 300);
 
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
+    return () => clearTimeout(delayDebounce);
   }, [query]);
 
   return (
-    <div className="relative w-full max-w-md">
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Rechercher un cours, un projet..."
-        className="w-full border rounded px-3 py-2"
-      />
+    <div className="relative max-w-xl mx-auto">
+      {/* Conteneur avec animation focus */}
+      <div className="flex items-center bg-white border border-gray-300 rounded-full shadow-sm transition-transform duration-300 focus-within:scale-[1.02] focus-within:ring-2 focus-within:ring-primary/60 focus-within:shadow-lg">
+        {/* Icône loupe */}
+        <div className="pl-3 text-gray-500">
+          <SearchIcon />
+        </div>
 
-      {open && (
-        <ul className="absolute z-10 bg-white border rounded mt-1 w-full shadow-md">
-          {suggestions.length > 0 ? (
-            suggestions.map((s, index) => (
-              <li
-                key={index}
-                className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                onClick={() => setQuery(s)}
-              >
-                {s}
-              </li>
-            ))
-          ) : (
-            <li className="px-3 py-2 text-gray-500">Aucune suggestion</li>
-          )}
+        {/* Input */}
+        <input
+          type="text"
+          placeholder="Rechercher un cours ou une leçon..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="flex-1 px-3 py-3 text-gray-700 focus:outline-none rounded-l-full"
+        />
+
+        {/* Bouton recherche */}
+        <button
+          onClick={() => console.log("Recherche :", query)}
+          className="bg-primary text-white px-5 py-3 rounded-r-full hover:bg-primary-dark transition"
+        >
+          Rechercher
+        </button>
+      </div>
+
+      {/* Liste des suggestions */}
+      {suggestions.length > 0 && (
+        <ul className="absolute mt-2 bg-white border border-gray-200 rounded-lg shadow-lg w-full z-50 max-h-56 overflow-y-auto">
+          {suggestions.map((s) => (
+            <li
+              key={s.id}
+              className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-left"
+              onClick={() => console.log("Selected:", s.title)}
+            >
+              {s.title}
+            </li>
+          ))}
         </ul>
       )}
     </div>
   );
-}
+};
+
+export default SearchBar;
